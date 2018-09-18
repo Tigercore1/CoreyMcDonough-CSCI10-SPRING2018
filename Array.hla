@@ -1,0 +1,145 @@
+/*
+ * Program Array
+ *
+ * written by			Corey McDonough
+ * created on			4/19/18
+ *
+ * This program has 3 arrays holding int8's, int16's, and int32's. The program
+ * clears all the arrays and then randomizes all the numbers in them. It outputs
+ * the numbers and then clears them again and displays the cleared arrays.
+ *
+ */
+program Ray;
+
+// includes
+#include("stdlib.hhf");
+
+// static declarations
+static
+	cellsi8:	int8[10] := [0,0,0,0,0,0,0,0,0,0];
+	cellsi16:	int16[10] := [0,0,0,0,0,0,0,0,0,0];
+	cellsi32:	int32[10] := [0,0,0,0,0,0,0,0,0,0];
+
+// procedure forward declarations
+	
+// procedure definitions
+procedure printCells(_addr: dword; _size: uns32; _datatype: int8);
+begin printCells;
+
+	pushad();
+	
+	mov(_addr, ebx);
+	for(mov(0, ecx); ecx < _size; inc(ecx)) do
+	
+		stdout.put("[", (type uns32 ecx), "] "); //output index
+		if(_datatype == 1) then // int8
+			stdout.put((type int8 [eax + ecx * 1]), nl);
+		elseif(_datatype == 2) then //int16
+			stdout.put((type int16 [eax + ecx * 2]), nl);
+		else
+			stdout.put((type int32 [eax + ecx * 4]), nl);
+		endif;
+		
+	endfor;
+	
+	popad();
+
+
+end printCells;
+
+procedure resetCells(_addr: dword; _size: uns32; _datatype: int8);
+begin resetCells;
+
+	pushad();
+		
+	mov(_addr, ebx);
+	mov(0, eax);
+	for(mov(0, ecx); ecx < _size; inc(ecx)) do
+		
+		if(_datatype == 1) then //int8
+			mov(al, [ebx + ecx * 1]);
+		elseif(_datatype == 2) then //int16
+			mov(ax, [ebx + ecx * 2]);
+		else //int32
+			mov(eax, [ebx + ecx * 4]);
+		endif;
+	
+	endfor;
+
+	popad();
+end resetCells;
+
+procedure initCells(_addr: dword; _size: uns32; _datatype: uns32);
+begin initCells;
+
+	pushad();
+	
+	mov(_addr, ebx);
+	for(mov(0, ecx); ecx < _size; inc(ecx)) do
+	
+		if(_datatype == 1) then // int8
+			rand.urange(-128, 127);
+			mov(al, [ebx + ecx * 1]);
+		elseif(_datatype == 2) then //int16
+			rand.urange(-32768, 32767);
+			mov(ax, [ebx + ecx * 2]);
+		else //int32
+			rand.urange(-214748364, 214748364);
+			mov(eax, [ebx + ecx * 4]);
+		endif;
+		
+	endfor;
+	
+	popad();
+
+end initCells; 
+	
+begin Ray;
+	// program instructions
+	rand.randomize();
+	
+	console.cls();
+	
+	stdout.put("int8 cells", nl);
+	mov(&cellsi8, eax);
+	printCells(eax, 10, 1);
+	stdout.put("int16 cells", nl);
+	mov(&cellsi16, ebx);
+	printCells(ebx, 10, 2);
+	stdout.put("int32 cells", nl);
+	mov(&cellsi32, ecx);
+	printCells(ecx, 10, 4);
+	
+	stdout.put(nl, nl, "Press ENTER to randomize!");
+	stdin.flushInput();
+	stdin.readLn();
+	console.cls();
+	
+	initCells(eax, 10, 1);
+	initCells(ebx, 10, 2);
+	initCells(ecx, 10, 4);
+
+	stdout.put("int8 cells", nl);
+	printCells(eax, 10, 1);
+	stdout.put("int16 cells", nl);
+	printCells(ebx, 10, 2);
+	stdout.put("int32 cells", nl);
+	printCells(ecx, 10, 4);
+	
+	stdout.put(nl, nl, "Press ENTER to reset.");
+	stdin.flushInput();
+	stdin.readLn();
+	console.cls();
+	
+	resetCells(eax, 10, 1);
+	resetCells(ebx, 10, 2);
+	resetCells(ecx, 10, 4);
+	
+	stdout.put("int8 cells", nl);
+	printCells(eax, 10, 1);
+	stdout.put("int16 cells", nl);
+	printCells(ebx, 10, 2);
+	stdout.put("int32 cells", nl);
+	printCells(ecx, 10, 4);
+	
+end Ray;

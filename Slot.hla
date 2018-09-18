@@ -1,0 +1,174 @@
+/*
+ * Program Slot
+ *
+ * written by			Corey McDonough
+ * created on			2/22/18
+ *
+ * Brief description (1 - 3 sentences).
+ *
+ */
+program Slot;
+
+// includes
+#include( "stdlib.hhf" );
+
+// static declarations
+static
+	bankroll:	int16 := 1000;
+	wager:		uns16 := 0;
+	symbol:		uns32 := 0;
+
+// procedure forward declarations
+procedure getUns16(prompt: string; min: uns16; max: uns16); @returns("ax"); @forward;
+procedure showSymbol(symbol: uns32); @forward;
+procedure spinOneWheel; @returns("eax"); @forward;
+procedure spinAllWheels; @returns("al"); @forward;
+
+
+procedure spinAllWheels;
+var
+	wheelOne:		uns32;
+	wheelTwo:		uns32;
+	wheelThree:		uns32;
+	
+begin spinAllWheels;
+
+	showSymbol(spinOneWheel());
+	mov(eax, wheelOne);
+	mov(eax, ebx);
+	
+	showSymbol(spinOneWheel());
+	mov(eax, wheelTwo);
+	
+	showSymbol(spinOneWheel());
+	mov(eax, wheelThree);
+	
+	
+	if(( ebx == wheelTwo ) && ( wheelTwo == eax )) then //if all wheels same
+		if(wheelOne == 1) then //if all 1...
+			mov(1, al);
+		elseif(wheelOne == 2) then
+			mov(2, al);
+		else
+			mov(3, al);
+		endif;
+	else //return 0 if not all same
+		mov(0, al);
+	endif;
+	
+	
+end spinAllWheels;
+
+
+procedure spinOneWheel;
+begin spinOneWheel;
+
+	rand.urange(1, 100);
+	
+	if (eax < 75) then
+		mov (1, eax);
+	elseif (eax < 90) then
+		mov (2, eax); //money
+	else
+		mov (3, eax); //star
+	endif;
+	
+end spinOneWheel;
+
+
+procedure getUns16(prompt: string; min: uns16; max: uns16);
+begin getUns16;
+	
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.getu16();
+			unprotected;
+			if(ax >= min && ax <= max) then
+				mov(ax, wager);
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getUns16;
+
+
+procedure showSymbol(symbol: uns32);
+begin showSymbol;
+
+	if ( symbol == 1) then
+		stdout.put("@CHERRY@ ");
+		
+	elseif (symbol == 2) then
+		stdout.put("$MONEY$ ");
+		
+	elseif (symbol == 3) then
+		stdout.put("*STAR* ");
+		
+	else
+		stdout.put("ERROR");
+	endif;
+	
+	
+end showSymbol;
+
+
+
+begin Slot;
+rand.randomize();
+console.setAttrs( console.white, console.black );
+
+forever
+	stdout.put("Current balance: ", bankroll, nl);
+	getUns16("Enter your wager. Enter '0' to quit. $[0-500] ", 0, 500);
+	breakif(wager == 0);
+	spinAllWheels();
+	if (al == 0) then
+		stdout.put("~ Loss!", nl);
+		mov(bankroll, ax);
+		sub(wager, ax);
+		mov(ax, bankroll);
+	elseif(al == 1) then
+		stdout.put("~ Winner! ");
+		console.setAttrs( console.green, console.black );
+		stdout.put("x1", nl);
+		console.setAttrs( console.white, console.black );
+		mov(bankroll, ax);
+		add(wager, ax);
+		mov(ax, bankroll);
+	elseif(al == 2) then
+		stdout.put("~ Winner! ");
+		console.setAttrs( console.yellow, console.black );
+		stdout.put("x2", nl);
+		console.setAttrs( console.white, console.black );
+		mov(bankroll, ax);
+		add(wager, ax);
+		add(wager, ax);
+		mov(ax, bankroll);
+	else
+		stdout.put("~ Winner! ");
+		console.setAttrs( console.cyan, console.black );
+		stdout.put("x3", nl);
+		console.setAttrs( console.white, console.black );
+		mov(bankroll, ax);
+		add(wager, ax);
+		add(wager, ax);
+		add(wager, ax);
+		mov(ax, bankroll);
+	endif;
+	
+	if(bankroll <= 0) then
+		stdout.put("Out of money.", nl)
+		break;
+	endif;
+	
+	endfor;
+	stdout.put("Goodbye.");
+
+end Slot;

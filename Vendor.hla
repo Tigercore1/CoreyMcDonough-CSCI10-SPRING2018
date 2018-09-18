@@ -1,0 +1,292 @@
+/*
+ * Vendor
+ *
+ * written by			Corey McDonough
+ * created on			3/06/18
+ *
+ * This program is a vending machine. The user can choose what item they want
+ * to purchase and it gets added to a cart. The user can then check out, receive
+ * change, and get a receipt printed out for their purchases.
+ */
+program Vendor;
+
+// includes
+#include( "stdlib.hhf" );
+
+
+
+// static declarations
+static
+	item1:			string:= "Wobbly sausage";
+	item2:			string:= "Bop it[TM]";
+	item3:			string:= "Life-Size Tinky Winky";
+	item4:			string:= "Youtube Algorithm Fix";
+	item5:			string:= "Tickle Me Elmo";
+	
+	inventory1:		uns8:= 4;
+	inventory2: 	uns8:= 7;
+	inventory3: 	uns8:= 1;
+	inventory4: 	uns8:= 0;
+	inventory5:		uns8:= 69;
+	
+	price1:			uns32:= 200;
+	price2:			uns32:= 800;
+	price3:			uns32:= 5000;
+	price4:			uns32:= 99999;
+	price5:			uns32:= 420;
+	
+	purchased1:		uns8:= 0;
+	purchased2:		uns8:= 0;
+	purchased3:		uns8:= 0;
+	purchased4:		uns8:= 0;
+	purchased5:		uns8:= 0;
+	
+	credits:		uns32:= 0;
+	creditsOwed:	uns32:= 0;
+	
+
+// procedure forward declarations
+procedure showMenu; @forward; //shows what is in current vending machine
+procedure getUns32(prompt: string; min: uns32; max: uns32); @returns("eax"); @forward;
+procedure getChange; @forward; //Dollars, quarters, etc.
+procedure print; @forward; //receipt
+
+
+// procedure definitions
+procedure print;	//does not print if purchased amount of item == 0
+begin print;		//lots of if/else because of receipt formatting. 
+
+stdout.put("|||||||||||||||||||||||||||||||||||||||||||||||||||||", nl);
+stdout.put("||                    ~RECEIPT~                    ||", nl);
+stdout.put("||                                                 ||", nl);
+stdout.put("|| Item                 #Purchased    Price[cents] ||", nl); 
+if(purchased1 == 0) then
+else
+	stdout.put("|| ", item1, "            ", purchased1, "             ", price1, "     ||", nl);
+endif;
+
+if(purchased2 == 0) then
+else
+	stdout.put("|| ", item2, "                ", purchased2, "             ", price2, "     ||", nl);
+endif;
+
+if(purchased3 == 0) then
+else
+	stdout.put("|| ", item3, "     ", purchased3, "             ", price3, "    ||", nl);
+endif;
+
+if(purchased4 == 0) then
+else
+	stdout.put("|| ", item4, "             ", purchased4, "             ", price4, "     ||", nl);
+endif;
+
+if(purchased5 == 0) then
+elseif(purchased5 >= 10) then
+	stdout.put("|| ", item5, "            ", purchased5, "            ", price5, "     ||", nl); //crazy formatting
+else
+	stdout.put("|| ", item5, "            ", purchased5, "             ", price5, "     ||", nl);
+endif;
+
+stdout.put("||                                                 ||", nl);
+if (creditsOwed < 1000) then
+	stdout.put("|| TOTAL COST: ", creditsOwed, " cents                           ||", nl); //more crazy formatting
+elseif(creditsOwed < 10000) then
+	stdout.put("|| TOTAL COST: ", creditsOwed, " cents                          ||", nl);
+else
+	stdout.put("|| TOTAL COST: ", creditsOwed, " cents                         ||", nl);
+endif;
+
+stdout.put("||                                                 ||", nl);
+stdout.put("|| ~Thank you for your purchase! Scammed hehe xd   ||", nl);
+stdout.put("||                                                 ||", nl);
+stdout.put("|||||||||||||||||||||||||||||||||||||||||||||||||||||", nl);
+
+end print;	
+
+
+procedure getChange;
+begin getChange;
+	//CHANGE AMOUNT
+	stdout.put("You entered ", credits, " credits.", nl);
+	
+	mov(credits, eax);
+	sub(creditsOwed, eax);
+	mov(eax, credits);
+	
+	stdout.put("Change owed: ", credits, nl);
+	
+	//DOLLARS
+	mov(0, edx);
+	div(100, edx:eax);
+	stdout.put("Change returned: ", nl, (type uns32 eax), " Dollars", nl);
+
+	//QUARTERS
+	mov(edx, eax);
+	mov(0, edx);
+	div(25, edx:eax);
+	stdout.put((type uns32 eax), " Quarters", nl);
+	
+	//DIMES
+	mov(edx, eax);
+	mov(0, edx);
+	div(10, edx:eax);
+	stdout.put((type uns32 eax), " Dimes", nl);
+	
+	//NICKELS
+	mov(edx, eax);
+	mov(0, edx);
+	div(5, edx:eax);
+	stdout.put((type uns32 eax), " Nickels", nl);
+	
+	//PENNIES
+	stdout.put((type uns32 edx), " Pennies", nl);
+
+end getChange;
+
+
+
+
+procedure getUns32(prompt: string; min: uns32; max: uns32);
+begin getUns32;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.getu32();
+			unprotected;
+			if(eax >= min && eax <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getUns32;
+
+
+
+procedure showMenu;
+begin showMenu;
+
+	stdout.put("#. Item			   Stock    Price[cents]", nl); 
+	stdout.put("1. ", item1, "          ", inventory1, "        ", price1, nl);
+	stdout.put("2. ", item2, "              ", inventory2, "        ", price2, nl);
+	stdout.put("3. ", item3, "   ", inventory3, "        ", price3, nl);
+	stdout.put("4. ", item4, "   ", inventory4, "        ", price4, nl);
+	stdout.put("5. ", item5, "          ", inventory5, "       ", price5, nl);
+	stdout.put("6. QUIT/CHECKOUT", nl);
+	
+end showMenu;
+
+
+
+begin Vendor;
+	
+	console.cls();
+	showMenu();
+	
+	forever
+		getUns32("Enter the number of the item you'd like to purchase [1-6]: ", 1, 6);
+		breakif(eax == 6); 
+		
+		if(eax == 1) then
+		
+			if(inventory1 == 0) then
+				stdout.put("OUT OF STOCK", nl);
+			else
+				inc(purchased1);
+				dec(inventory1);
+				mov(creditsOwed, eax);
+				add(price1, eax);
+				mov(eax, creditsOwed);
+				
+				console.cls();
+				showMenu();
+				stdout.put("Item successfully added to cart.", nl);
+			endif;
+			
+		elseif(eax == 2) then
+		
+			if(inventory2 == 0) then
+				stdout.put("OUT OF STOCK", nl);
+			else
+				inc(purchased2);
+				dec(inventory2);
+				mov(creditsOwed, eax);
+				add(price2, eax);
+				mov(eax, creditsOwed);
+				
+				console.cls();
+				showMenu();
+				stdout.put("Item successfully added to cart.", nl);
+			endif;
+			
+		elseif(eax == 3) then
+		
+			if(inventory3 == 0) then
+				stdout.put("OUT OF STOCK", nl);
+			else
+				inc(purchased3);
+				dec(inventory3);
+				mov(creditsOwed, eax);
+				add(price3, eax);
+				mov(eax, creditsOwed);
+				
+				console.cls();
+				showMenu();
+				stdout.put("Item successfully added to cart.", nl);
+			endif;
+			
+		elseif(eax == 4) then
+		
+			if(inventory4 == 0) then
+				stdout.put("OUT OF STOCK", nl);
+			else
+				inc(purchased4);
+				dec(inventory4);
+				mov(creditsOwed, eax);
+				add(price4, eax);
+				mov(eax, creditsOwed);
+				
+				console.cls();
+				showMenu();
+				stdout.put("Item successfully added to cart.", nl);
+			endif;
+			
+		elseif(eax == 5) then
+		
+			if(inventory5 == 0) then
+				stdout.put("OUT OF STOCK", nl);
+			else
+				inc(purchased5);
+				dec(inventory5);
+				mov(creditsOwed, eax);
+				add(price5, eax);
+				mov(eax, creditsOwed);
+				
+				console.cls();
+				showMenu();
+				stdout.put("Item successfully added to cart.", nl);
+			endif;
+		
+		else
+			stdout.put("WHAT. FIXME.");
+			
+		endif;
+			
+	endfor;
+	
+	stdout.put("Credits owed: ", creditsOwed, nl);
+	getUns32("Insert at least amount owed to continue: ", creditsOwed, 1000000000);
+	mov(eax, credits);
+	console.cls();
+	getChange();
+	stdout.put(nl, nl);
+	print();
+	
+
+end Vendor;

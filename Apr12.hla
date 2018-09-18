@@ -1,0 +1,37 @@
+program Apr12;
+
+#include("stdlib.hhf");
+
+static
+
+	number:		uns8:= 0;
+	address:	pointer to uns8;
+
+
+
+begin Apr12;
+
+	mov(&number, address);
+	mov(99, number);
+	mov(address, eax);
+	mov([eax], bl);
+	stdout.put((type uns8 bl), nl);
+
+	
+	mov(42, bl);
+	mov(bl, [eax]);
+	stdout.put(number, nl)
+	
+	stdin.flushInput();
+	stdin.getu8();
+	
+	
+	
+	
+/*	mov(99, al);
+	mov(address, eax);
+	mov(al, [eax] );
+*/
+
+
+end Apr12;

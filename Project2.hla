@@ -1,0 +1,672 @@
+/*
+ * Spreadshiiit
+ *
+ * written by			Corey McDonough
+ * created on			5/14/18
+ *
+ * This program allows the user to create their own one row spreadsheet. You can
+ * perform various calculations with the row and change the presentation of the
+ * data. 
+ */
+ program Spreadshiiit;
+
+// includes
+#include("stdlib.hhf");
+
+// static declarations
+static
+	numCells:		uns32 := 0;
+	datatype:		uns32 := 0;
+	arrayAddress: 	dword;
+	calculation:	uns32 := 1; //1 = sum, 2 = average, 3 = max, 4 = min
+	presentation:	uns32 := 1; //1 = decimal, 2 = binary, 3 = hex
+	overflow:		uns32 := 0; //0 = false, 1 = true
+	
+// procedure forward declarations
+procedure getInt8(min: int8; max: int8); @returns("al"); @forward;
+procedure getInt16(min: int16; max: int16); @returns("ax"); @forward;
+procedure getInt32(min: int32; max: int32); @returns("eax"); @forward;
+procedure editCell(addr: dword; idx: uns32; dt: uns32); @forward;
+procedure displayCells(addr: dword; num: uns32; dt: uns32); @forward;
+procedure showBits(value: uns32; dt: uns32); @forward;
+procedure computeSum(addr: dword; num: uns32; dt: uns32); @forward;
+procedure computeAverage(addr: dword; num: uns32; dt: uns32); @forward;
+procedure computeLargest(addr: dword; num: uns32; dt: uns32); @forward;
+procedure computeSmallest(addr: dword; num: uns32; dt: uns32); @forward;
+
+// procedure definitions
+procedure getInt8(min: int8; max: int8);
+begin getInt8;
+	push(ebx);
+	push(ecx);
+	push(edx);
+
+	forever
+		try
+			stdin.flushInput();
+			stdin.geti8();
+			unprotected;
+			if(al >= min && al <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+	pop(edx);
+	pop(ecx);
+	pop(ebx);
+	
+end getInt8;
+
+
+procedure getInt16(min: int16; max: int16);
+begin getInt16;
+
+	push(ebx);
+	push(ecx);
+	push(edx);
+
+	forever
+		try
+			stdin.flushInput();
+			stdin.geti16();
+			unprotected;
+			if(ax >= min && ax <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+	pop(edx);
+	pop(ecx);
+	pop(ebx);
+	
+end getInt16;
+
+	
+procedure getInt32(min: int32; max: int32);
+begin getInt32;
+
+	push(ebx);
+	push(ecx);
+	push(edx);
+
+
+	forever
+		try
+			stdin.flushInput();
+			stdin.geti32();
+			unprotected;
+			if(eax >= min && eax <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+	pop(edx);
+	pop(ecx);
+	pop(ebx);
+	
+end getInt32;
+
+
+procedure editCell(addr: dword; idx: uns32; dt: uns32);
+begin editCell;
+	
+	pushad();
+	
+	mov(addr, ebx);
+	mov(idx, ecx);
+	
+	if(dt == 1) then //int8
+		stdout.put("Enter a new value [-128 to 127]: ");
+		getInt8(-128, 127);
+		mov(al, (type int8 [ebx + ecx * 1]));
+	elseif(dt == 2) then //int16
+		stdout.put("Enter a new value [-32,768 to 32,767]: ");
+		getInt16(-32768, 32767);
+		mov(ax, (type int16 [ebx + ecx * 2]));
+	else //int32
+		stdout.put("Enter a new value [-2,147,483,648 to 2,147,483,647]: ");
+		getInt32(-2147483648, 2147483647);
+		mov(eax, (type int32 [ebx + ecx * 4]));
+	endif;
+	
+	popad();
+	
+end editCell;
+
+
+procedure displayCells(addr: dword; num: uns32; dt: uns32);
+begin displayCells;
+	
+	pushad();
+	
+	// showing table in decimal/binary/hex
+	stdout.put("YOUR TABLE IN ");
+	if (presentation == 1) then
+		stdout.put("DECIMAL");
+	elseif (presentation == 2) then
+		stdout.put("BINARY");
+	else
+		stdout.put("HEX");
+	endif;
+	
+	stdout.put(nl, nl);
+	
+	mov(addr, ebx);
+	mov(1, eax);
+	
+	// data cells
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		stdout.put((type uns32 eax), ": ");
+		
+		if(dt == 1) then // int8
+			if(presentation == 1) then
+				stdout.put((type int8 [ebx + ecx * 1]));
+			elseif(presentation == 2) then
+				mov([ebx + ecx * 1], edx);
+				showBits(edx, 1);
+			else
+				mov([ebx + ecx * 1], edx);
+				stdout.put(dl);
+			endif;
+		elseif(dt == 2) then // int16
+			if(presentation == 1) then
+				stdout.put((type int16 [ebx + ecx * 2]));
+			elseif(presentation == 2) then
+				mov([ebx + ecx * 2], edx);
+				showBits(edx, 2);
+			else
+				mov([ebx + ecx * 2], edx);
+				stdout.put(dx);
+			endif;
+		else // int32
+			if(presentation == 1) then
+				stdout.put((type int32 [ebx + ecx * 4]));
+			elseif(presentation == 2) then
+				mov([ebx + ecx * 4], edx);
+				showBits(edx, 3);
+			else
+				mov([ebx + ecx * 4], edx);
+				stdout.put(edx);
+			endif;
+		endif;
+		
+		stdout.newln();
+		inc(eax);
+	
+	endfor;
+	
+	// calculation cell name
+	stdout.newln();
+	if (calculation == 1) then
+		stdout.put("SUM: ");
+	elseif (calculation == 2) then
+		stdout.put("AVERAGE: ");
+	elseif (calculation == 3) then
+		mov(0, overflow);
+		stdout.put("MAXIMUM: ");
+	else
+		mov(0, overflow);
+		stdout.put("MINIMUM: ");
+	endif;
+	
+	// calculation cell value. nested if to decide presentation
+	if(dt == 1) then // int8
+		if(presentation == 1) then // decimal
+			stdout.put((type int8 [ebx + ecx * 1]));
+		elseif(presentation == 2) then // binary
+			mov([ebx + ecx * 1], edx);
+			showBits(edx, 1);
+		else // hex
+			mov([ebx + ecx * 1], edx);
+			stdout.put(dl);
+		endif;
+	elseif(dt == 2) then // int16
+		if(presentation == 1) then // decimal
+			stdout.put((type int16 [ebx + ecx * 2]));
+		elseif(presentation == 2) then //binary
+			mov([ebx + ecx * 2], edx);
+			showBits(edx, 2);
+		else // hex
+			mov([ebx + ecx * 2], edx);
+			stdout.put(dx);
+		endif;
+	else // int32
+		if(presentation == 1) then // decimal
+			stdout.put((type int32 [ebx + ecx * 4]));
+		elseif(presentation == 2) then // binary
+			mov([ebx + ecx * 4], edx);
+			showBits(edx, 3);
+		else // hex
+			mov([ebx + ecx * 4], edx);
+			stdout.put(edx);
+		endif;
+	
+	endif;
+	
+	// display error message if overflow
+	if(overflow == 1) then
+		stdout.put(" [ERROR]");
+	endif;
+	stdout.newln();
+	
+	popad();
+	
+end displayCells;
+
+
+procedure showBits(value: uns32; dt: uns32);
+begin showBits;
+	
+	pushad();
+	
+	if (dt == 1) then // 8 bits
+		mov(value, eax);
+		stdout.put("%");
+		for(mov(0, cl); cl<8; inc(cl)) do
+			shl(1, al);
+			if (@c) then
+				stdout.put("1");
+			else
+				stdout.put("0");
+			endif;
+			
+			if (cl == 3) then
+				stdout.put("_");
+			endif;
+		endfor;
+	elseif (dt == 2) then // 16 bits
+		mov(value, eax);
+		stdout.put("%");
+		for(mov(0, cl); cl<16; inc(cl)) do
+			shl(1, ax);
+			if (@c) then
+				stdout.put("1");
+			else
+				stdout.put("0");
+			endif;
+			
+			if (cl == 3 || cl == 7 || cl == 11) then
+				stdout.put("_");
+			endif;
+		endfor;
+	else // 32 bits
+		mov(value, eax);
+		stdout.put("%");
+		for(mov(0, cl); cl<32; inc(cl)) do
+			shl(1, eax);
+			if (@c) then
+				stdout.put("1");
+			else
+				stdout.put("0");
+			endif;
+			
+			if (cl == 3 || cl == 7 || cl == 11 || cl == 15) then
+				stdout.put("_");
+			endif;
+			if (cl == 19 || cl == 23 || cl == 27) then
+				stdout.put("_");
+			endif;
+		endfor;
+	endif;
+	
+	popad();
+	
+end showBits;
+
+
+procedure computeSum(addr: dword; num: uns32; dt: uns32);
+begin computeSum;
+	
+	pushad();
+	
+	mov(0, overflow);
+	mov(addr, ebx);
+	mov(0, edx);
+	
+	// add cells into edx
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		if (dt == 1) then // int 8
+			add((type int8 [ebx + ecx * 1]), (type int8 dl));
+			if(@o) then
+				mov(1, overflow);
+			endif;
+		elseif(dt == 2) then // int16
+			add((type int16 [ebx + ecx * 2]), (type int16 dx));
+			if(@o) then
+				mov(1, overflow);
+			endif;
+		else // int 32
+			add((type int32 [ebx + ecx * 4]), (type int32 edx));
+			if(@o) then
+				mov(1, overflow);
+			endif;
+		endif;
+	endfor;
+	
+	// place sum into cell
+	if(dt == 1) then // int8
+		mov(dl, [ebx + ecx * 1]);
+	elseif(dt == 2) then // int16
+		mov(dx, [ebx + ecx * 2]);
+	else // int32
+		mov(edx, [ebx + ecx * 4]);
+	endif;
+
+	popad();
+
+end computeSum;
+
+
+procedure computeAverage(addr: dword; num: uns32; dt: uns32);
+begin computeAverage;
+	
+	pushad();
+	
+	mov(addr, ebx);
+	mov(num, ecx);
+	mov(0, edx);
+	
+	// divide calculation cell by num
+	if(dt == 1) then
+		mov([ebx + ecx * 1], eax);
+		cbw();
+		idiv(cl, ax);
+		mov(al, [ebx + ecx * 1]);
+	elseif(dt == 2) then
+		mov([ebx + ecx * 2], eax);
+		cwd();
+		idiv(cx, dx:ax);
+		mov(ax, [ebx + ecx * 2]);
+	else
+		mov([ebx + ecx * 4], eax);
+		cdq();
+		idiv(ecx, edx:eax);
+		mov(eax, [ebx + ecx * 4]);
+	endif;
+
+	popad();
+	
+end computeAverage;
+
+
+procedure computeLargest(addr: dword; num: uns32; dt: uns32);
+begin computeLargest;
+
+	pushad();
+	
+	// largest goes into edx
+	mov(addr, ebx);
+	mov(0, edx);
+	
+	// start with first number in d
+	if(dt == 1) then // int8	
+		mov([ebx + 0 * 1], dl);
+	elseif(dt == 2) then // int16
+		mov([ebx + 0 * 2], dx);
+	else // int32
+		mov([ebx + 0 * 4], edx);
+	endif;
+	
+	// compare each cell to d
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		
+		if(dt == 1) then // int8
+			mov([ebx + ecx * 1], al);
+			if((type int8 al) > (type int8 dl)) then
+				mov(al, dl);
+			endif;
+			
+		elseif(dt == 2) then // int16
+			mov([ebx + ecx * 2], ax);
+			if((type int16 ax) > (type int16 dx)) then
+				mov(ax, dx);
+			endif;
+			
+		else // int32
+			mov([ebx + ecx * 4], eax);
+			if((type int32 eax) > (type int32 edx)) then
+				mov(eax, edx);
+			endif;
+		endif;
+		
+	endfor;
+	
+	// place largest into cell
+	if(dt == 1) then // int8
+		mov(dl, [ebx + ecx * 1]);
+	elseif(dt == 2) then // int16
+		mov(dx, [ebx + ecx * 2]);
+	else // int32
+		mov(edx, [ebx + ecx * 4]);
+	endif;
+	stdout.newln();
+
+	popad();
+
+end computeLargest;
+
+
+procedure computeSmallest(addr: dword; num: uns32; dt: uns32);
+begin computeSmallest;
+
+	pushad();
+	
+	// smallest goes into edx
+	mov(addr, ebx);
+	mov(0, edx);
+	
+	// start with first number in d
+	if(dt == 1) then // int8	
+		mov([ebx + 0 * 1], dl);
+	elseif(dt == 2) then // int16
+		mov([ebx + 0 * 2], dx);
+	else // int32
+		mov([ebx + 0 * 4], edx);
+	endif;
+	
+	// compare each cell to d
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		
+		if(dt == 1) then // int8
+			mov([ebx + ecx * 1], al);
+			if((type int8 al) < (type int8 dl)) then
+				mov(al, dl);
+			endif;
+			
+		elseif(dt == 2) then // int16
+			mov([ebx + ecx * 2], ax);
+			if((type int16 ax) < (type int16 dx)) then
+				mov(ax, dx);
+			endif;
+			
+		else // int32
+			mov([ebx + ecx * 4], eax);
+			if((type int32 eax) < (type int32 edx)) then
+				mov(eax, edx);
+			endif;
+		endif;
+		
+	endfor;
+	
+	// place smallest into cell
+	if(dt == 1) then // int8
+		mov(dl, [ebx + ecx * 1]);
+	elseif(dt == 2) then // int16
+		mov(dx, [ebx + ecx * 2]);
+	else // int32
+		mov(edx, [ebx + ecx * 4]);
+	endif;
+	stdout.newln();
+	
+	popad();
+
+end computeSmallest;
+
+
+
+begin Spreadshiiit;
+	// program instructions
+	forever;
+		// default for reset
+		mov(0, numCells);
+		mov(0, datatype);
+		mov(1, presentation);
+		mov(1, calculation);
+		
+		// get inputs
+		stdout.put("Enter number of cells [2-10]: ");
+		getInt32(2, 10);
+		mov(eax, numCells);
+		
+		stdout.newln();
+		stdout.put("Select desired data type", nl);
+		stdout.put("[1] int8", nl);
+		stdout.put("[2] int16", nl);
+		stdout.put("[3] int32", nl);
+		
+		stdout.put("your choice [1-3]: ");
+		getInt32(1, 3);
+		
+		mov(eax, datatype);
+		
+		//compute how much to allocate
+		mov(numCells, eax);
+		inc(eax);
+		
+		if(datatype == 2) then
+			mul(2, eax);
+		elseif(datatype ==3) then
+			mul(4, eax);
+		endif;
+		
+		console.cls();
+		
+		// allocate bytes
+		stdout.put((type uns32 eax), " bytes have been allocated.", nl, nl);
+		
+		mem.zalloc(eax);
+		mov(eax, arrayAddress);
+	
+		// main loop starts
+		forever;
+			displayCells(arrayAddress, numCells, datatype);
+			stdout.put(nl, "What would you like to do?", nl);
+			stdout.put("[1] edit a cell", nl);
+			stdout.put("[2] change calculation", nl);
+			stdout.put("[3] change presentation", nl);
+			stdout.put("[4] reset and start over", nl);
+			stdout.put("[0] quit", nl);
+			stdout.put(nl, "your choice [0-4]: ");
+			
+			getInt32(0, 4);
+			
+			// main loop logic
+			if(eax == 1) then // edit cell
+				stdout.put(nl, "Which cell would you like to edit?", nl)
+				stdout.put("your choice [1-", (type uns32 numCells), "]: ");
+				
+				mov(numCells, ebx);
+				getInt32(1, ebx);
+				
+				dec(eax);
+				editCell(arrayAddress, eax, datatype);
+				
+				//edit calculation cell
+				if (calculation == 1) then
+					computeSum(arrayAddress, numCells, datatype);
+				elseif (calculation == 2) then
+					computeSum(arrayAddress, numCells, datatype);
+					computeAverage(arrayAddress, numCells, datatype);
+				elseif (calculation == 3) then
+					computeLargest(arrayAddress, numCells, datatype);
+				else
+					computeSmallest(arrayAddress, numCells, datatype);
+				endif;
+			
+			
+			elseif(eax == 2) then // change calculation
+				console.cls();
+				stdout.put("Current calculation: ");
+				if (calculation == 1) then
+					stdout.put("SUM", nl, nl);
+				elseif (calculation == 2) then
+					stdout.put("AVERAGE", nl, nl);
+				elseif (calculation == 3) then
+					stdout.put("MAXIMUM", nl, nl);
+				else
+					stdout.put("MINIMUM", nl, nl);
+				endif;
+				
+				stdout.put("[1] change to SUM", nl);
+				stdout.put("[2] change to AVERAGE", nl);
+				stdout.put("[3] change to MAX", nl);
+				stdout.put("[4] change to MIN", nl);
+				stdout.put(nl, "your choice [1-4]: ");
+				getInt32(1,4);
+				
+				mov(eax, calculation);
+				
+				// calculate new calculation cell
+				if (calculation == 1) then
+					computeSum(arrayAddress, numCells, datatype);
+				elseif (calculation == 2) then
+					computeSum(arrayAddress, numCells, datatype);
+					computeAverage(arrayAddress, numCells, datatype);
+				elseif (calculation == 3) then
+					computeLargest(arrayAddress, numCells, datatype);
+				else
+					computeSmallest(arrayAddress, numCells, datatype);
+				endif;
+			
+			
+			elseif(eax == 3) then // change presentation
+				console.cls();
+				stdout.put("Currently displaying values in: ");
+				if (presentation == 1) then
+					stdout.put("DECIMAL", nl, nl);
+				elseif (calculation == 2) then
+					stdout.put("BINARY", nl, nl);
+				else
+					stdout.put("HEXADECIMAL", nl, nl);
+				endif;
+				
+				stdout.put("[1] change to DECIMAL", nl);
+				stdout.put("[2] change to BINARY", nl);
+				stdout.put("[3] change to HEXADECIMAL", nl);
+				stdout.put(nl, "your choice [1-3]: ");
+				getInt32(1,3);
+				
+				mov(eax, presentation);
+
+				
+			else // break main loop if reset or quit
+				break;
+			endif;
+			
+		console.cls();
+		endfor;
+	
+		mem.free(arrayAddress);
+		console.cls();
+
+		breakif( eax == 0); // quit
+		
+	endfor;
+	stdout.put("Goodbye.");
+
+end Spreadshiiit;

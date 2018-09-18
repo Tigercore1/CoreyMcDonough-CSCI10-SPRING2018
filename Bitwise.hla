@@ -1,0 +1,210 @@
+/*
+ * Bitwise
+ *
+ * written by			Corey McDonough
+ * created on			4/5/18
+ *
+ * This program requires inputs from the user. It then takes these inputs and manipulates
+ * them using bitwise operations and, or, xor, and not.
+ *
+*/
+
+program Bitwise;
+
+// includes
+#include("stdlib.hhf");
+
+// static declarations
+
+// procedure forward declarations
+procedure getUns8(prompt: string; min: uns8; max: uns8); @returns("al"); @forward;
+procedure getInt8(prompt: string; min: int8; max: int8); @returns("al"); @forward;
+procedure showBits(value: uns8); forward;
+
+
+// procedure definitions
+procedure showBits(value: uns8);
+begin showBits;
+	
+	push(eax);
+	push(ecx);
+
+	mov(value, al);
+	stdout.put("%");
+	for(mov(0, cl); cl<8; inc(cl)) do
+		shl(1, al);
+		if (@c) then
+			stdout.put("1");
+		else
+			stdout.put("0");
+		endif;
+		
+		if (cl == 3) then
+			stdout.put("_");
+		endif;
+	endfor;
+	
+	pop(ecx);
+	pop(eax);
+	
+end showBits;
+
+
+procedure getUns8(prompt: string; min: uns8; max: uns8);
+begin getUns8;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.getu8();
+			unprotected;
+			if(al >= min && al <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getUns8;
+
+
+procedure getInt8(prompt: string; min: int8; max: int8);
+begin getInt8;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.geti8();
+			unprotected;
+			if(al >= min && al <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getInt8;
+
+// program instructions
+begin Bitwise;
+
+	forever;
+	
+		//PART ONE
+		console.cls();
+		stdout.put("PART ONE: not", nl);
+		getUns8("Enter a number [0-255]: ", 0, 255);
+		stdout.putsSize("input [decimal]: ", -32, ' ');
+		stdout.put((type uns8 al), nl)
+		stdout.putsSize("input [binary]: ", -32, ' ');
+		showBits(al);
+		stdout.newln();
+
+		not(al);
+
+		stdout.putsSize("bitwise complement [decimal]: ", -32, ' ');
+		stdout.put((type uns8 al), nl);
+		stdout.putsSize("bitwise complement [binary]: ", -32, ' ');
+		showBits(al);
+
+		stdout.put(nl, nl, "Press ENTER to continue");
+		stdin.flushInput();
+		stdin.readLn();
+		console.cls();
+
+		//PART TWO
+		stdout.put("PART TWO: and/or", nl);
+		getInt8("Enter a number [-128 to 127]: ", -128, 127);
+		stdout.putsSize("input [decimal]: ", -32, ' ');
+		stdout.put((type int8 al), nl)
+		stdout.putsSize("input [binary]: ", -32, ' ');
+		showBits(al);
+		stdout.newln();
+
+		mov(0, bl);
+		
+		stdout.putsSize("bits that are set: ", -32, ' ');
+		for(mov(1, cl); cl != 0; shl(1, cl)) do
+			mov(cl, dl);
+			and(al, dl);
+			if (cl == dl) then
+				stdout.put((type uns8 bl), " ");
+			endif;
+			inc(bl);
+		endfor;
+		
+		stdout.newln();
+		
+		or(%1111_1111, al);
+		
+		stdout.putsSize("all bits now set [binary]: ", -32, ' ');
+		showBits(al);
+
+		stdout.put(nl, nl, "Press ENTER to continue");
+		stdin.flushInput();
+		stdin.readLn();
+		console.cls();
+		
+		//PART THREE
+		stdout.put("PART THREE: and", nl);
+		getUns8("Enter a number [0-255]: ", 0, 255);
+		stdout.putsSize("input [decimal]: ", -32, ' ');
+		stdout.put((type uns8 al), nl)
+		stdout.putsSize("input [binary]: ", -32, ' ');
+		showBits(al);
+		stdout.newln();
+		
+		mov(al, bl);
+		and(%1111_0000, bl);
+		stdout.putsSize("lower nibble cleared [binary]: ", -32, ' ');
+		showBits(bl);
+		stdout.newln();
+		
+		mov(al,bl);
+		and(%0000_1111, bl);
+		stdout.putsSize("upper nibble cleared [binary]: ", -32, ' ');
+		showBits(bl);
+		
+		stdout.put(nl, nl, "Press ENTER to continue");
+		stdin.flushInput();
+		stdin.readLn();
+		console.cls();
+		
+		//PART FOUR
+		stdout.put("PART FOUR: xor", nl);
+		getInt8("Enter a number [-128 to 127]: ", -128, 127);
+		stdout.putsSize("input [decimal]: ", -32, ' ');
+		stdout.put((type int8 al), nl)
+		stdout.putsSize("input [binary]: ", -32, ' ');
+		showBits(al);
+		stdout.newln();
+		
+		mov(al, bl);
+		xor(%1111_1111, bl);
+		stdout.putsSize("bitwise complement [binary]: ", -32, ' ');
+		showBits(bl);
+		stdout.newln();
+		xor(al, al);
+		stdout.putsSize("zeroed out [binary]: ", -32, ' ');
+		showBits(al);
+		
+		
+		//REPEAT
+		stdout.put(nl, nl, "Go again? [y/n] ");
+		stdin.flushInput();
+		stdin.getc();
+		breakif( al == 'n' || al == 'N');
+		
+	endfor;
+	stdout.put("Goodbye.");
+	
+	
+end Bitwise;

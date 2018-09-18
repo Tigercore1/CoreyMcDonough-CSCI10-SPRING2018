@@ -1,0 +1,139 @@
+/*
+ * BinaryManip
+ *
+ * written by			Corey McDonough
+ * created on			3/29/18
+ *
+ * This program prompts the user for a Uns8 value. It then shows that value as a binary or decimal value. It also
+ * manipulates the binary value using ror,shr, etc. After that it adds to variables together and tests the carry
+ * flag.
+ */
+program BinaryManip;
+
+// includes
+#include("stdlib.hhf");
+
+// static declarations
+
+// procedure forward declarations
+procedure getUns8(prompt: string; min: uns8; max: uns8); @returns("al"); @forward;
+procedure showBits(value: uns8); @forward;
+
+// procedure definitions
+procedure showBits(value: uns8);
+begin showBits;
+	
+	push(eax);
+	push(ecx);
+
+	mov(value, al);
+	stdout.put("%");
+	for(mov(0, cl); cl<8; inc(cl)) do
+		shl(1, al);
+		if (@c) then
+			stdout.put("1");
+		else
+			stdout.put("0");
+		endif;
+		
+		if (cl == 3) then
+			stdout.put("_");
+		endif;
+	endfor;
+	
+	pop(ecx);
+	pop(eax);
+	
+end showBits;
+
+procedure getUns8(prompt: string; min: uns8; max: uns8);
+begin getUns8;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.getu8();
+			unprotected;
+			if(al >= min && al <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getUns8;
+
+begin BinaryManip;
+	// program instructions
+	stdout.put("PART ONE: ror, rol, shr, shl", nl); //input
+	getUns8("Enter a number [0-255]: ", 0, 255); 
+	stdout.newln();
+	stdout.put("input [decimal]:		", (type uns8 al), nl);
+	stdout.put("input [binary]:			");
+	showBits(al);
+	stdout.newln();
+	stdout.newln();
+	
+	//rotate right
+	mov(al, bl);
+	ror(1, bl);
+	stdout.put("rotate right one [decimal]:	", (type uns8 bl), nl);
+	stdout.put("rotate right one [binary]:	");
+	showBits(bl);
+	stdout.newln();
+	
+	//rotate left
+	mov(al, bl);
+	rol(1, bl);
+	stdout.put("rotate left one [decimal]:	", (type uns8 bl), nl);
+	stdout.put("rotate left one [binary]:	");
+	showBits(bl);
+	stdout.newln();
+	
+	//shift right
+	mov(al, bl);
+	shr(1, bl);
+	stdout.put("shift right one [decimal]:	", (type uns8 bl), nl);
+	stdout.put("shift right one [binary]:	");
+	showBits(bl);
+	stdout.newln();
+	
+	//shift left
+	mov(al, bl);
+	shl(1, bl);
+	stdout.put("shift left one [decimal]:	", (type uns8 bl), nl);
+	stdout.put("shift left one [binary]:	");
+	showBits(bl);
+	stdout.newln();
+	stdout.newln();
+	
+	
+	//PART TWO
+	stdout.put("PART TWO: add", nl); //first input
+	mov(getUns8("Enter a number [0-255]: ", 0, 255), bl);
+	stdout.put("input [decimal]:		", (type uns8 bl), nl);
+	stdout.put("input [binary]:			");
+	showBits(bl);
+	stdout.newln();
+	stdout.newln();
+	
+	getUns8("Enter another number [0-255]: ", 0, 255); //second input
+	stdout.put("input [decimal]:		", (type uns8 al), nl);
+	stdout.put("input [binary]:			");
+	showBits(al);
+	stdout.newln();
+	stdout.newln();
+	
+	add(bl, al); //add + carry flag
+	if (@c) then
+		stdout.put("CARRY BIT SET/OVERFLOW", nl);
+	endif;
+	stdout.put("sum [decimal]:			", (type uns8 al), nl);
+	stdout.put("sum [binary]:			");
+	showBits(al);
+	
+end BinaryManip;

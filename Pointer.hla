@@ -1,0 +1,151 @@
+/*
+ * Program Pval
+ *
+ * written by			Corey McDonough
+ * created on			4/12/18
+ *
+ * This program takes in an int8, int16, and int32. It then tells the address of
+ * the stored values as well as their data size and value using pointers.
+ */
+program Pval;
+
+// includes
+#include("stdlib.hhf");
+
+// static declarations
+static
+	number8:		int8;
+	number16:		int16;
+	number32:		int32;
+
+// procedure forward declarations
+procedure getInt8(prompt: string; min: int8; max: int8); @returns("al"); @forward;
+procedure getInt16(prompt: string; min: int16; max: int16); @returns("ax"); @forward;
+procedure getInt32(prompt: string; min: int32; max: int32); @returns("eax"); @forward;
+procedure displayValue(address: dword; dataType: uns8); @forward;
+
+// procedure definitions
+procedure displayValue(address: dword; dataType: uns8);
+begin displayValue;
+
+	stdout.put("$", address, " = ");
+	mov(address, eax);
+	
+	if(dataType == 1) then	
+		mov([eax], bl);
+		stdout.put((type int8 bl), " (int8)");
+		
+	elseif(dataType == 2) then
+		mov([eax], bx);
+		stdout.put((type int16 bx), " (int16)");
+		
+	else
+		mov([eax], ebx);
+		stdout.put((type int32 ebx), " (int32)");
+	endif;
+	
+	stdout.newln();
+
+
+end displayValue;
+
+
+procedure getInt8(prompt: string; min: int8; max: int8);
+begin getInt8;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.geti8();
+			unprotected;
+			if(al >= min && al <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getInt8;
+
+procedure getInt16(prompt: string; min: int16; max: int16);
+begin getInt16;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.geti16();
+			unprotected;
+			if(ax >= min && ax <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getInt16;
+
+procedure getInt32(prompt: string; min: int32; max: int32);
+begin getInt32;
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.geti32();
+			unprotected;
+			if(eax >= min && eax <= max) then
+				break;
+			else
+				stdout.put("Input not in required range.", nl, nl);
+			endif;
+		anyexception
+			stdout.put("Invalid input.", nl, nl);
+		endtry;
+	endfor;
+	
+end getInt32;
+
+
+
+begin Pval;
+
+	// program instructions
+	forever;
+
+		getInt8("Please enter a valid int8: ", -128, 127);
+		mov(al, number8);
+		
+		getInt16("Please enter a valid int16: ", -32768, 32767);
+		mov(ax, number16);
+		
+		getInt32("Please enter a valid int32: ", -2147483648, 2147483647);
+		mov(eax, number32);
+		
+		mov(&number8, eax);
+		displayValue(eax, 1);
+
+		mov(&number16, eax);
+		displayValue(eax, 2);
+		
+		mov(&number32, eax);
+		displayValue(eax, 3);
+
+		// repeat
+		stdout.put(nl, "Go again? [y/n] ");
+		stdin.flushInput();
+		stdin.getc();
+		breakif( al == 'n' || al == 'N');
+		console.cls();
+	endfor;
+	stdout.put("Goodbye.");
+
+
+end Pval;

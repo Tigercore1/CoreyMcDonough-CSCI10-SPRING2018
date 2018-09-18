@@ -1,0 +1,225 @@
+/*
+ * Program Cell
+ *
+ * written by			Corey McDonough
+ * created on			4/26/18
+ *
+ * This program has a dynamic array with procedures to output the array and edit
+ * pieces of it. It also has a procedure to find the largest cell in the array. 
+ * The user can choose how big he or she wants the array to be, and then gets
+ * to decide which values should be in the array. The whole array and the largest
+ * cell are outputted.
+ */
+ program Cell;
+
+#include("stdlib.hhf");
+
+static
+	numCells:		uns32;
+	datatype:		uns32;
+	arrayAddress: 	dword;
+
+procedure editCell(addr: dword; idx: uns32; dt: uns32);
+begin editCell;
+	pushad();
+	
+	
+	mov(addr, ebx);
+	mov(idx, ecx);
+	
+	if(dt == 1) then //int8
+		stdout.put("Enter a new value: ");
+		stdin.flushInput();
+		stdin.geti8();
+		mov(al, (type int8 [ebx + ecx * 1]));
+	elseif(dt == 2) then //int16
+		stdout.put("Enter a new value: ");
+		stdin.flushInput();
+		stdin.geti16();
+		mov(ax, (type int16 [ebx + ecx * 2]));
+	else //int32
+		stdout.put("Enter a new value: ");
+		stdin.flushInput();
+		stdin.geti32();
+		mov(eax, (type int32 [ebx + ecx * 4]));
+	endif;
+	
+	
+	popad();
+	
+end editCell;
+
+
+procedure displayCells(addr: dword; num: uns32; dt: uns32);
+begin displayCells;
+	pushad();
+	
+	mov(addr, ebx);
+	mov(1, eax);
+	
+	// data cells
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		stdout.put((type uns32 eax), ": ");
+		
+		if(dt == 1) then //int8
+			stdout.put((type int8 [ebx + ecx * 1]));
+		elseif(dt == 2) then //int16
+			stdout.put((type int16 [ebx + ecx * 2]));
+		else //int32
+			stdout.put((type int32 [ebx + ecx * 4]));
+		endif;
+		
+		stdout.newln();
+		inc(eax);
+	
+	endfor;
+	
+	// calculation cell
+	stdout.put(nl, "LARGEST: ");
+	if(dt == 1) then //int8
+		stdout.put((type int8 [ebx + ecx * 1]));
+	elseif(dt == 2) then //int16
+		stdout.put((type int16 [ebx + ecx * 2]));
+	else //int32
+		stdout.put((type int32 [ebx + ecx * 4]));
+	endif;
+	stdout.newln();
+	
+	
+	popad();
+	
+end displayCells;
+
+
+procedure computeLargest(addr: dword; num: uns32; dt: uns32);
+begin computeLargest;
+
+	pushad();
+	
+	//MOVE LARGEST INTO EDX
+	mov(addr, ebx);
+	mov(0, edx);
+	
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		
+		if(dt == 1) then //int8
+			mov([ebx + ecx * 1], eax);
+			if((type int32 eax) > (type int32 edx)) then
+				mov(eax, edx);
+			endif;
+			
+		elseif(dt == 2) then //int16
+			mov([ebx + ecx * 2], eax);
+			if((type int32 eax) > (type int32 edx)) then
+				mov(eax, edx);
+			endif;
+			
+		else //int32
+			mov([ebx + ecx * 4], eax);
+			if((type int32 eax) > (type int32 edx)) then
+				mov(eax, edx);
+			endif;
+		endif;
+		
+	endfor;
+	
+	
+	//PLACE LARGEST IN CELL
+	if(dt == 1) then //int8
+		mov(edx, [ebx + ecx * 1]);
+	elseif(dt == 2) then //int16
+		mov(edx, [ebx + ecx * 2]);
+	else //int32
+		mov(edx, [ebx + ecx * 4]);
+	endif;
+	stdout.newln();
+
+	
+	popad();
+
+end computeLargest;
+
+
+
+begin Cell;
+
+	forever;
+		
+		stdout.put("Enter number of cells [2-10]: ");
+		stdin.getu32();
+		mov(eax, numCells);
+		
+		stdout.newln();
+		stdout.put("Select desired data type", nl);
+		stdout.put("[1] int8", nl);
+		stdout.put("[2] int16", nl);
+		stdout.put("[3] int32", nl);
+		stdout.put(nl, "your choice [1-3]: ");
+		
+		stdin.flushInput();
+		stdin.getu32();
+		
+		mov(eax, datatype);
+		
+		//computer how much to allocate
+		mov(numCells, eax);
+		inc(eax);
+		
+		
+		if(datatype == 2) then
+			mul(2, eax);
+		elseif(datatype ==3) then
+			mul(4, eax);
+		endif;
+		
+		console.cls();
+		
+		stdout.put((type uns32 eax), " bytes have been allocated.", nl, nl);
+		
+		mem.zalloc(eax);
+		mov(eax, arrayAddress);
+	
+		forever;
+			stdout.put("YOUR CELLS", nl);
+			displayCells(arrayAddress, numCells, datatype);
+			stdout.put(nl, "What would you like to do?", nl);
+			stdout.put("[1] edit a cell", nl);
+			stdout.put("[2] quit", nl);
+			stdout.put(nl, "your choice [1-2]: ");
+			
+			stdin.flushInput();
+			stdin.getu32();
+			
+			
+			if(eax == 1) then
+				stdout.put(nl, "Which cell would you like to edit?", nl)
+				stdout.put("your choice [1-", (type uns32 numCells), "]: ");
+				
+				stdin.flushInput();
+				stdin.getu32();
+				
+				dec(eax);
+				editCell(arrayAddress, eax, datatype);
+				computeLargest(arrayAddress, numCells, datatype);
+			
+			else
+				break;
+			endif;
+			
+		console.cls();
+		endfor;
+	
+	
+		mem.free(arrayAddress);
+		stdout.put("Memory has been freed.");
+
+		//REPEAT
+		stdout.put(nl, nl, "Go again? [y/n] ");
+		stdin.flushInput();
+		stdin.getc();
+		breakif( al == 'n' || al == 'N');
+		
+	endfor;
+	stdout.put("Goodbye.");
+
+end Cell;

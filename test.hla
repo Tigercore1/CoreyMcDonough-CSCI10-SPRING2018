@@ -1,0 +1,66 @@
+/*
+ * Number Comparer
+ *
+ * written by           Corey McDonough
+ * created on           2/1/18
+ *
+ * This program accepts two number inputs between 1-50 and then compares them. It will then 
+ * as whether or not the user wishes to continue. It will loop if values are 0 or over 50.
+ */
+
+program NumCompare;
+#include( "stdlib.hhf" );
+
+static
+	FirstNum:          uns8 := 1;
+	SecondNum:         uns8 := 1;
+	Response:          char := 'n';
+	
+begin NumCompare;
+	stdout.put( "Hello person!", nl );
+	
+	forever
+	
+	repeat
+
+		stdout.put( "Please enter a number between 1-50. "); 
+		stdin.getu8();
+	
+	until( (al < 51) && (al != 0) );
+	
+	mov(al, FirstNum);
+	
+	repeat
+
+		stdout.put( "Please enter another number between 1-50. "); 
+		stdin.getu8();
+	
+	until ( (al < 51) && (al != 0) ) ;
+	
+	mov(al, SecondNum);
+	
+	if (FirstNum > al) then
+		stdout.put( "The first number (X) is greater than the second number (Y). " );
+	
+	elseif(al > FirstNum) then 
+		stdout.put( "The second number (Y) is greater than the first number (X). " );
+		
+	else
+		stdout.put( "The first number (X) is equivalent to the second number (Y). " );
+		
+	endif;
+	
+	
+	
+	stdout.put( nl, "Would you like to go again [y/n]? ")
+	stdin.flushInput();
+	stdin.getc();
+	mov(al, Response);
+	breakif( Response == 'n' || Response == 'N');
+	
+	endfor;
+	
+	stdout.put( "Goodbye.")
+	
+end NumCompare;
+

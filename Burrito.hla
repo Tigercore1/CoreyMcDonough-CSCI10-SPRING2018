@@ -1,0 +1,198 @@
+/*
+ * Program Burrito
+ *
+ * written by			Corey McDonough
+ * created on			3/15/18
+ *
+ * This program is a burrito scoring system. It takes information regarding 
+ * a recently eaten burrito and then gives it a score out of 10 in several 
+ * categories. It also finds the average, total, min, and max scores.
+ */
+program Burrito;
+
+// includes
+#include("stdlib.hhf");
+
+// procedure forward declarations
+procedure getUns8(prompt: string; min: uns8; max: uns8); @returns("al"); @forward;
+procedure showGraph(prompt: string; max: uns8); @forward;
+procedure totalAndAverage(num1: uns8; num2: uns8; num3: uns8; num4: uns8); @forward;
+procedure min(num1: uns8; num2: uns8; num3: uns8; num4: uns8); @forward;
+procedure max(num1: uns8; num2: uns8; num3: uns8; num4: uns8); @forward;
+
+// procedure definitions
+procedure getUns8(prompt: string; min: uns8; max: uns8);
+begin getUns8;
+
+	push(ebx);
+	push(ecx);
+	push(edx);
+
+	forever
+		try
+			stdout.put(prompt);
+			stdin.flushInput();
+			stdin.getu8();
+			unprotected
+				if(al >= min && al <= max) then
+					break;
+				else
+					stdout.put("Please enter a value between ");
+					stdout.put(min, " and ", max, ".", nl);
+				endif;
+				
+		anyexception
+			stdout.put("Please enter a value between ");
+			stdout.put(min, " and ", max, ".", nl);
+		endtry;
+	endfor;
+	
+	pop(edx);
+	pop(ecx);
+	pop(ebx);
+	
+end getUns8;
+
+
+procedure showGraph(prompt: string; max: uns8);
+begin showGraph;
+
+	push(ecx);
+
+	stdout.put(prompt);
+	for(mov(0, cl); cl < max; inc(cl)) do
+		stdout.put("*");
+	endfor;
+	stdout.put(nl);
+	
+	pop(ecx);
+	
+end showGraph;
+
+procedure totalAndAverage(num1: uns8; num2: uns8; num3: uns8; num4: uns8);
+begin totalAndAverage;
+
+	push(eax);
+
+	mov(num1, al);
+	add(num2, al);
+	add(num3, al);
+	add(num4, al);
+	stdout.put("Total:		", (type uns8 al) , nl); //sum
+	
+	mov(0, ah);
+	div(4, ax);
+	stdout.put("Average:	", (type uns8 al), nl); //average
+	
+	pop(eax);
+	
+end totalAndAverage;
+
+procedure min(num1: uns8; num2: uns8; num3: uns8; num4: uns8);
+begin min;
+
+	push(eax);
+	
+	mov(num1, al); 
+	
+	if(num2 < al) then
+		mov(num2, al);
+	endif;
+	
+	if(num3 < al) then
+		mov(num3, al);
+	endif;
+	
+	if(num4 < al) then
+		mov(num4, al);
+	endif;
+
+	stdout.put("Lowest:		", (type uns8 al), nl);
+	
+	pop(eax);
+
+end min;
+
+procedure max(num1: uns8; num2: uns8; num3: uns8; num4: uns8);
+begin max;
+
+	push(eax);
+	
+	mov(num1, al);
+	
+	if(num2 > al) then
+		mov(num2, al);
+	endif;
+	
+	if(num3 > al) then
+		mov(num3, al);
+	endif;
+	
+	if(num4 > al) then
+		mov(num4, al);
+	endif;
+	
+	stdout.put("Highest:	", (type uns8 al), nl);
+
+	pop(eax);
+
+end max;
+
+
+begin Burrito;
+	
+	forever;
+	console.cls();
+	
+	stdout.put("WELCOME TO COREY'S BURRITO SCORER!", nl, nl);
+	
+	// inputs
+	mov(getUns8("Enter overall flavor rating [1 to 10]:      ", 1, 10), dl);
+	mov(getUns8("Price in dollars [0 to 10]:                 ", 0, 10), cl);
+	mov(getUns8("How spicy was it [1 to 10]:                 ", 1, 10), bl);
+	getUns8("Hours spent on toilet afterward [0 to 10]:  ", 0, 10);
+	console.cls();
+	
+	push(eax);
+	
+	mov(10,al); //calculation for price. Each dollar is -1 score
+	sub(cl, al);
+	mov(al, cl);
+	
+	pop(eax);
+	
+	push(ebx);
+	
+	mov(al, bl); //calculation for toilet time. Each hour = -1 score
+	mov(10, al);
+	sub(bl, al);
+	
+	pop(ebx);
+	
+	
+	// outputs
+	stdout.put("SCORE POINTS [1-10]", nl);
+	stdout.put("Flavor:		", (type uns8 dl), nl);
+	stdout.put("Price:		", (type uns8 cl), nl);
+	stdout.put("Spiciness:	", (type uns8 bl), nl);
+	stdout.put("Normal bowels:	", (type uns8 al), nl);
+	
+	stdout.put(nl,nl,"GRAPH VIEW", nl);
+	showGraph("Flavor:		", dl);
+	showGraph("Price:		", cl);
+	showGraph("Spiciness:	", bl);
+	showGraph("Normal bowels:	", al);
+	
+	stdout.put(nl, nl, "ADDITIONAL POINT STATS", nl);
+	totalAndAverage(al, bl, cl, dl);
+	min(al, bl, cl, dl);
+	max(al, bl, cl, dl);
+
+	// go again?
+	stdout.put(nl, "Score again? [y/n] ");
+	stdin.flushInput();
+	stdin.getc();
+	breakif( al == 'n' || al == 'N');
+	endfor;
+
+end Burrito;

@@ -1,0 +1,60 @@
+program May3;
+
+#include("stdlib.hhf");
+
+
+begin May3;
+
+	stdout.put("al: ");
+	stdin.getc();
+
+	
+	//if(al == 100) then
+	//	stdout.put("A perfect score!");
+	//endif;
+	
+	//cmp(al, 100);
+	//jne skip_perfect;
+	//	stdout.put("A perfect score!");
+	//skip_perfect:
+	
+	//cmp(al, 42);
+	//jne loop_fun;
+	//	stdout.put("That is the answer.");
+	//	jmp loop_end;
+	//loop_fun:
+	//stdout.put("Nope.");
+	//loop_end:
+	
+	//cmp(al, 1);
+	//jne OPTION_1;
+	//	stdout.put("You selected door number one.");
+	//	jmp OPTION_END;
+	//OPTION_1:
+	//cmp(al, 2);
+	//jne OPTION_2;
+	//	stdout.put("You selected door number two.");
+	//	jmp OPTION_END;
+	//OPTION_2:
+	//	stdout.put("You selected door number three. Prize inside!");
+	//OPTION_END:
+	
+	cmp(al, 'A');
+	jne OPTION_1;
+		stdout.put("A is for Apple.");
+		jmp OPTION_END;
+	OPTION_1:
+	cmp(al, 'C');
+	jne OPTION_2;
+		stdout.put("C is for Candy.");
+		jmp OPTION_END;
+	OPTION_2:
+	cmp(al, 'S');
+	jne OPTION_3;
+		stdout.put("S is for Soda.");
+		jmp OPTION_END;
+	OPTION_3:
+		stdout.put((type char al), " not recognized.");
+	OPTION_END:
+
+end May3;

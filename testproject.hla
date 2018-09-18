@@ -1,0 +1,28 @@
+program Tests;
+
+#include("stdlib.hhf");
+
+begin Tests;
+
+stdout.put("Enter two numbers.", nl);
+stdin.geti8();
+mov(al, bl);
+
+stdin.geti8();
+
+stdout.put((type int8 al), " + ", (type int8 bl), " = ");
+
+try
+	add(bl, al);
+anyexception
+	stdout.put("Out of range.");
+endtry;
+
+
+stdout.put((type int8 al));
+
+
+
+
+
+end Tests;

@@ -1,0 +1,130 @@
+//final project.
+
+//need numCells. (Enter num of cells desired: ___ -> numCells);
+
+//datatype
+
+//add an extra cell to do calculation results into.
+
+program Apr26;
+
+#include("stdlib.hhf");
+
+static
+	numCells: uns32;
+	datatype: uns32;
+	arrayAddress: dword;
+	
+procedure displayCells(addr: dword; num: uns32; dt: uns32);
+begin displayCells;
+	pushad();
+	
+	mov(addr, ebx);
+	mov(1, eax);
+	
+	// data cells
+	for(mov(0, ecx); ecx < num; inc(ecx)) do
+		stdout.put((type uns32 eax), ": ");
+		
+		if(dt == 1) then //int8
+			stdout.put((type int8 [ebx + ecx * 1]));
+		elseif(dt == 2) then //int16
+			stdout.put((type int16 [ebx + ecx * 2]));
+		else //int32
+			stdout.put((type int32 [ebx + ecx * 4]));
+		endif;
+		
+		stdout.newln();
+		inc(eax);
+	
+	endfor;
+	
+	// calculation cell
+	stdout.put(nl, "CALCULATION: ");
+	if(dt == 1) then //int8
+		stdout.put((type int8 [ebx + ecx * 1]));
+	elseif(dt == 2) then //int16
+		stdout.put((type int16 [ebx + ecx * 2]));
+	else //int32
+		stdout.put((type int32 [ebx + ecx * 4]));
+	endif;
+	stdout.newln();
+	
+	
+	popad();
+	
+end displayCells;
+
+procedure editCell(addr: dword; idx: uns32; dt: uns32);
+begin editCell;
+	pushad();
+	
+	
+	mov(addr, ebx);
+	mov(idx, ecx);
+	
+	if(dt == 1) then //int8
+		stdout.put("enter a new value: ");
+		stdin.geti8(); //USE PROGRAM SLFKLSDFJSDLFJSDLFKJFDLSDJFL FIXME
+		mov(al, (type int8 [ebx + ecx * 1]));
+	elseif(dt == 2) then //int16
+		stdout.put("enter a new value: ");
+		stdin.geti16(); //USE PROGRAM SLFKLSDFJSDLFJSDLFKJFDLSDJFL FIXME
+		mov(ax, (type int16 [ebx + ecx * 2]));
+	else //int32
+		stdout.put("enter a new value: ");
+		stdin.geti32(); //USE PROGRAM SLFKLSDFJSDLFJSDLFKJFDLSDJFL FIXME
+		mov(eax, (type int32 [ebx + ecx * 4]));
+	endif;
+	
+	
+	popad();
+	
+end editCell;
+
+begin Apr26;
+
+	stdout.put("Enter number of cells [2-10]: ");
+	stdin.getu32(); //YOU WILL USE YOUR GET XX PROCEDURE HERE
+	mov(eax, numCells);
+	
+	stdout.newln();
+	stdout.put("Select desired data type", nl);
+	stdout.put("[1] int8", nl);
+	stdout.put("[2] int16", nl);
+	stdout.put("[3] int32", nl);
+	stdout.put(nl, "your choice [1-3]: ");
+	
+	stdin.getu32(); //YOU WILL USE YOUR GETXX PROCEDURE HERE
+	
+	mov(eax, datatype);
+	
+	//computer how much to allocate
+	mov(numCells, eax);
+	inc(eax);
+	
+	
+	if(datatype == 2) then
+		mul(2, eax);
+	elseif(datatype ==3) then
+		mul(4, eax);
+	endif;
+	
+	stdout.put((type uns32 eax), " bytes have been allocated", nl);
+	
+	mem.zalloc(eax);
+	mov(eax, arrayAddress);
+	
+	// THIS IS WHERE THE PROGRAM HAPPENS
+	stdout.newln();
+	displayCells(arrayAddress, numCells, datatype);
+	editCell(arrayAddress, 0, datatype);
+	displayCells(arrayAddress, numCells, datatype);
+	
+	mem.free(arrayAddress);
+	
+	
+	
+	
+
+end Apr26;
